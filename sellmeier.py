@@ -51,7 +51,7 @@ def sellmeier_n_squared(axis: str, wavelength_um: float) -> float:
     """
     Calculate n^2 using Sellmeier equation for given axis and wavelength at reference temp 25°C.
     """
-    cfs = sellmeier_coeffs[axis]
+    cfs = sellmeier_coeffs[axis] # Get coefficients for the given axis
     λ2 = wavelength_um ** 2
     n2 = cfs['A'] + cfs['B'] / (λ2 - cfs['C']) + cfs['D'] / (λ2 - cfs['E'])
     return n2
@@ -62,10 +62,13 @@ def refractive_index(axis: str, wavelength_um: float, temperature_C: float) -> f
     Calculate refractive index for given axis, wavelength (μm), and temperature (°C).
     Applies thermo-optic correction linearly.
     """
+    # Step 1: Calculate n(λ) at 25°C
     n_ref = math.sqrt(sellmeier_n_squared(axis, wavelength_um))
-    dndT = thermo_optic_coeffs[axis]
-    delta_T = temperature_C - 25.0  # Reference temp at 25°C
-    n_temp = n_ref + dndT * delta_T
+
+    # Step 2: Apply linear temperature correction using dn/dT
+    dndT = thermo_optic_coeffs[axis]         # Get the temperature coefficient
+    delta_T = temperature_C - 25.0           # ΔT from reference temperature (25°C)
+    n_temp = n_ref + dndT * delta_T          # Adjust n using: n(T) = n_ref + dn/dT * ΔT
     return n_temp
 
 
