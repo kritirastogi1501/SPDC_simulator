@@ -35,7 +35,7 @@ def n_y(lambda_um, T=25.0):
     Implements Eq. (1) and Eq. (2).
     """
     l2 = lambda_um**2
-    n2 = A_y + B_y / (l2 - C_y) - D_y * l2
+    n2 = A_y + (B_y*l2 )/ (l2 - C_y) - D_y * l2
     n0 = np.sqrt(n2)
     return n0 + dn_dT_y(lambda_um) * (T - 25.0)
 
@@ -46,7 +46,7 @@ def n_z(lambda_um, T=25.0):
     Implements Eq. (1) and Eq. (3).
     """
     l2 = lambda_um**2
-    n2 = A_z + B_z / (l2 - C_z) - D_z * l2
+    n2 = A_z + (B_z*l2)/ (l2 - C_z) - D_z * l2
     n0 = np.sqrt(n2)
     return n0 + dn_dT_z(lambda_um) * (T - 25.0)
 
