@@ -3,94 +3,44 @@
 import sys
 sys.path.append("C:/Users/Asus/OneDrive/Desktop/Sanya Personal/Projects/DRDO internship/spdc_simulator/src")
 
-import numpy as np
-from scipy.optimize import brentq
-from optics.sellmeier import n_z, n_y, poling_period
+import math
+from optics.sellmeier import n_y_T, n_z_T, nm_to_um, grating_period
 
-def delta_k(lambda_s_um, T, lambda_p_um, poling_period_25C, interaction_type='type0'):
-    """
-    Compute Δk = kₚ - kₛ - kᵢ - k_QPM,
-    where kⱼ = (2π/λⱼ)·nⱼ(λⱼ,T), and
-    k_QPM = 2π / Λ(T).
-    interaction_type: 'type0' or 'type2'
-    """
-    try:
-        # 1/λₚ = 1/λₛ + 1/λᵢ  ⇒  λᵢ = 1 / (1/λₚ - 1/λₛ)
-        lambda_i_um = 1.0 / (1.0 / lambda_p_um - 1.0 / lambda_s_um)
-        if lambda_i_um <= 0 or np.isnan(lambda_i_um):
-            return np.nan
+# Pump wavelength fixed at 405 nm
+λp_nm = 405.0
+λp_um = nm_to_um(λp_nm)
 
-        # pick refractive indices depending on interaction type
-        if interaction_type == 'type0':
-            n_p = n_z(lambda_p_um, T)
-            n_s = n_z(lambda_s_um, T)
-            n_i = n_z(lambda_i_um, T)
-        else:  # 'type2'
-            n_p = n_z(lambda_p_um, T)
-            n_s = n_y(lambda_s_um, T)
-            n_i = n_z(lambda_i_um, T)
+# Eq.9 inversions
+def λi_from_λs(λs_nm):
+    return 1.0 / (1.0/λp_nm - 1.0/λs_nm)
 
-        if np.isnan(n_p) or np.isnan(n_s) or np.isnan(n_i):
-            return np.nan
+def λs_from_λi(λi_nm):
+    return 1.0 / (1.0/λp_nm - 1.0/λi_nm)
 
-        k_p = 2.0 * np.pi * n_p / lambda_p_um
-        k_s = 2.0 * np.pi * n_s / lambda_s_um
-        k_i = 2.0 * np.pi * n_i / lambda_i_um
-        k_qpm = 2.0 * np.pi / poling_period(poling_period_25C, T)
+# Eq.8 → Δk as function of (λs, T), **using grating_period(T) from Eq7**
+def delta_k_s(λs_nm, T):
+    λs_um = nm_to_um(λs_nm)
+    λi_nm = λi_from_λs(λs_nm)
+    λi_um = nm_to_um(λi_nm)
 
-        return k_p - k_s - k_i - k_qpm
+    conv = 1e-6  # μm → m
+    kp =  2*math.pi * n_y_T(λp_um, T) / (λp_um * conv)
+    ks =  2*math.pi * n_z_T(λs_um, T) / (λs_um * conv)
+    ki =  2*math.pi * n_y_T(λi_um, T) / (λi_um * conv)
+    kG =  2*math.pi / (grating_period(T) * conv)  # <-- Eq7 here!
 
-    except Exception:
-        return np.nan
+    return kp - ks - ki - kG
 
+# Eq.8 → Δk as function of (λi, T)
+def delta_k_i(λi_nm, T):
+    λi_um = nm_to_um(λi_nm)
+    λs_nm = λs_from_λi(λi_nm)
+    λs_um = nm_to_um(λs_nm)
 
-def find_phase_match_lambda_s(
-    T,
-    lambda_p_um,
-    poling_period_25C,
-    interaction_type='type0',
-    search=(0.5, 1.2)
-):
-    """
-    Find λₛ ∈ [search[0], search[1]] such that Δk(λₛ,T)=0 using Brent’s method.
-    Returns None if there is no sign‐change in that interval.
-    """
-    def f(λs):
-        return delta_k(λs, T, lambda_p_um, poling_period_25C, interaction_type)
+    conv = 1e-6
+    kp =  2*math.pi * n_y_T(λp_um, T) / (λp_um * conv)
+    ks =  2*math.pi * n_z_T(λs_um, T) / (λs_um * conv)
+    ki =  2*math.pi * n_y_T(λi_um, T) / (λi_um * conv)
+    kG =  2*math.pi / (grating_period(T) * conv)
 
-    a, b = search
-    fa = f(a)
-    fb = f(b)
-
-    if np.isnan(fa) or np.isnan(fb) or (fa * fb > 0):
-        return None
-
-    return brentq(f, a, b)
-
-
-def find_degenerate_temperature(
-    lambda_s_target_um,
-    lambda_p_um,
-    poling_period_25C,
-    interaction_type='type2',
-    search=(30.0, 100.0)
-):
-    """
-    Find T ∈ [search[0], search[1]] so that Δk(lambda_s_target_um, T)=0.
-    Raises ValueError if no sign‐change is found in that T‐range.
-    """
-    def f(T):
-        val = delta_k(lambda_s_target_um, T, lambda_p_um, poling_period_25C, interaction_type)
-        if np.isnan(val):
-            raise ValueError(f"Δk(T) returned NaN at T={T:.2f}")
-        return val
-
-    a, b = search
-    fa = f(a)
-    fb = f(b)
-    if fa * fb > 0:
-        raise ValueError(
-            f"No root for Δk=0 in T ∈ [{a:.2f}, {b:.2f}]: f({a:.2f})={fa:.3e}, f({b:.2f})={fb:.3e}"
-        )
-    return brentq(f, a, b)
-
+    return kp - ks - ki - kG
