@@ -1,46 +1,81 @@
 # phase_match.py
 
+# Add custom module path (adjust based on your system)
 import sys
 sys.path.append("C:/Users/Asus/OneDrive/Desktop/Sanya Personal/Projects/DRDO internship/spdc_simulator/src")
 
 import math
-from optics.sellmeier import n_y_T, n_z_T, nm_to_um, grating_period
+from optics.sellmeier import n_y_T, n_z_T, nm_to_um, poling_period
+
+# ----------------------------
+# Constants and conversions
+# ----------------------------
 
 # Pump wavelength fixed at 405 nm
 λp_nm = 405.0
-λp_um = nm_to_um(λp_nm)
+λp_um = nm_to_um(λp_nm)  # Convert nm to μm for Sellmeier use
 
-# Eq.9 inversions
+# ----------------------------
+# Eq. 9 – Wavelength relation:
+# 1/λp = 1/λs + 1/λi
+# ----------------------------
+
 def λi_from_λs(λs_nm):
+    """
+    Calculate idler wavelength λi [nm] from signal wavelength λs [nm] using Equation 9.
+    """
     return 1.0 / (1.0/λp_nm - 1.0/λs_nm)
 
 def λs_from_λi(λi_nm):
+    """
+    Calculate signal wavelength λs [nm] from idler wavelength λi [nm] using Equation 9.
+    """
     return 1.0 / (1.0/λp_nm - 1.0/λi_nm)
 
-# Eq.8 → Δk as function of (λs, T), **using grating_period(T) from Eq7**
+# ----------------------------
+# Eq. 8 – Δk expression:
+# Δk = (2π·n_y(λp)/λp) - (2π·n_z(λs)/λs) - (2π·n_y(λi)/λi) - (2π/Λ(T))
+#
+# Notes:
+# - n_y(λp) and n_y(λi) from Equation 1 → temp-adjusted using Equation 5
+# - n_z(λs) from Equation 2 → temp-adjusted using Equation 6
+# - Λ(T) from Equation 7
+# ----------------------------
+
 def delta_k_s(λs_nm, T):
+    """
+    Compute phase mismatch Δk [1/m] as a function of signal wavelength λs [nm] and temperature T [°C].
+    λi is computed via Equation 9.
+    """
     λs_um = nm_to_um(λs_nm)
     λi_nm = λi_from_λs(λs_nm)
     λi_um = nm_to_um(λi_nm)
 
-    conv = 1e-6  # μm → m
-    kp =  2*math.pi * n_y_T(λp_um, T) / (λp_um * conv)
-    ks =  2*math.pi * n_z_T(λs_um, T) / (λs_um * conv)
-    ki =  2*math.pi * n_y_T(λi_um, T) / (λi_um * conv)
-    kG =  2*math.pi / (grating_period(T) * conv)  # <-- Eq7 here!
+    conv = 1e-6  # Convert μm to meters
+
+    # Each term corresponds to one term in Equation 8
+    kp = 2 * math.pi * n_y_T(λp_um, T) / (λp_um * conv)   # First term: n_y(λp)
+    ks = 2 * math.pi * n_z_T(λs_um, T) / (λs_um * conv)   # Second term: n_z(λs)
+    ki = 2 * math.pi * n_y_T(λi_um, T) / (λi_um * conv)   # Third term: n_y(λi)
+    kG = 2 * math.pi / (poling_period(T) * conv)          # Fourth term: Λ(T)
 
     return kp - ks - ki - kG
 
-# Eq.8 → Δk as function of (λi, T)
 def delta_k_i(λi_nm, T):
+    """
+    Compute phase mismatch Δk [1/m] as a function of idler wavelength λi [nm] and temperature T [°C].
+    λs is computed via Equation 9.
+    """
     λi_um = nm_to_um(λi_nm)
     λs_nm = λs_from_λi(λi_nm)
     λs_um = nm_to_um(λs_nm)
 
-    conv = 1e-6
-    kp =  2*math.pi * n_y_T(λp_um, T) / (λp_um * conv)
-    ks =  2*math.pi * n_z_T(λs_um, T) / (λs_um * conv)
-    ki =  2*math.pi * n_y_T(λi_um, T) / (λi_um * conv)
-    kG =  2*math.pi / (grating_period(T) * conv)
+    conv = 1e-6  # Convert μm to meters
+
+    # Terms as per Equation 8
+    kp = 2 * math.pi * n_y_T(λp_um, T) / (λp_um * conv)   # n_y(λp)
+    ks = 2 * math.pi * n_z_T(λs_um, T) / (λs_um * conv)   # n_z(λs)
+    ki = 2 * math.pi * n_y_T(λi_um, T) / (λi_um * conv)   # n_y(λi)
+    kG = 2 * math.pi / (poling_period(T) * conv)          # Λ(T)
 
     return kp - ks - ki - kG
