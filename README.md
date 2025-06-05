@@ -87,12 +87,9 @@ $$
 
 ### **Equation 8 – Phase mismatch Δk**
 
+
 $$
-\Delta k =
-\frac{2\pi \cdot n_y(\lambda_p)}{\lambda_p}
-- \frac{2\pi \cdot n_z(\lambda_s)}{\lambda_s}
-- \frac{2\pi \cdot n_y(\lambda_i)}{\lambda_i}
-- \frac{2\pi}{\Lambda(T)}
+\Delta k = \frac{2\pi \cdot n_y(\lambda_p)}{\lambda_p} - \frac{2\pi \cdot n_z(\lambda_s)}{\lambda_s} - \frac{2\pi \cdot n_y(\lambda_i)}{\lambda_i} - \frac{2\pi}{\Lambda(T)}
 $$
 
 **Clarifications:**
