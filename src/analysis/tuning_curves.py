@@ -75,3 +75,5 @@ plt.grid(True)
 
 # Display all plots
 plt.show()
+
+#94.12
