@@ -17,7 +17,7 @@ from optics.phase_match import delta_k_s, delta_k_i  # Δk functions from Equati
 # -------------------------
 
 # Temperature range [°C] over which to compute tuning curves
-T_vals = np.linspace(50, 500, 500)  # 141 points from 0°C to 500°C
+T_vals = np.linspace(50, 500, 10000)  # 141 points from 0°C to 500°C
 
 # Wavelength bracket [nm] for root-finding (where Δk = 0)
 λ_brack = (0.7, 1)

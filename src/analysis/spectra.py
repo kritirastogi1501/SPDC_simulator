@@ -25,7 +25,7 @@ from optics.phase_match import delta_k_s, delta_k_i
 # Parameters
 # ----------------------
 L = 25e-3           # Crystal length in meters (25 mm)
-T = 132            # Temperature in °C (choose your operating T)
+T = 266.2           # Temperature in °C (choose your operating T)
 
 # Wavelength ranges (μm)
 lambda_s_um = np.linspace(0.75, 0.9, 500)   # Signal: 750–900 nm
