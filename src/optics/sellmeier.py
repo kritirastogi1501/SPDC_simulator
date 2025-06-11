@@ -11,17 +11,7 @@ A_z, B_z, C_z, D_z = 2.25411, 1.06543, 0.05486, 0.02140
 A_pol = 6.7e-6    # linear thermal expansion coefficient
 B_pol = 11e-9     # quadratic thermal expansion coefficient
 
-# Utility conversion
 
-def nm_to_um(lam_nm):
-    """
-    Convert wavelength from nanometers to microns.
-    Parameters:
-        lam_nm (float): Wavelength in nanometers.
-    Returns:
-        float: Wavelength in microns.
-    """
-    return lam_nm * 1e-3  # 1 nm = 1e-3 μm
 
 # Sellmeier refractive-index equations (Eqs. 1 & 2)
 
@@ -134,13 +124,13 @@ def poling_period(T):
     Returns:
         float: Poling period in microns at temperature T.
     """
-    return Λ0 * (1 + A_pol * (T - 25.0) + B_pol * (T - 25.0)**2)
+    return Λ0 * (1 + (A_pol * (T - 25.0)) + (B_pol * (T - 25.0)**2))
 
 # test
 if __name__ == "__main__":
     # Convert pump and idler wavelengths to microns
-    λp_um = nm_to_um(405)
-    λi_um = nm_to_um(810)
+    λp_um = 0.405
+    λi_um = 0.810
     # Print baseline refractive indices and poling period
     print(f"n_y @405 nm: {n_y(λp_um):.6f}")
     print(f"n_z @810 nm: {n_z(λi_um):.6f}")
