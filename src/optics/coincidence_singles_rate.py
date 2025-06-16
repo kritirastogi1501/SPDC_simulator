@@ -14,7 +14,7 @@ from optics.phase_match_type2 import delta_k_s
 # -------------------------------
 c = 3e8  # Speed of light (m/s)
 L = 25e-3  # Crystal length in meters
-T = 75  # Temperature in Celsius
+T = 247  # Temperature in Celsius
 
 # Detection/collection efficiencies
 eta_s = 0.6  # Signal arm efficiency

@@ -20,8 +20,8 @@ plt.ylabel('Λ (μm)')
 plt.title('Plot of Λ vs Temperature')
 plt.grid(True)
 plt.ylim(9, 11)
-plt.xlim(-1000, 1000)
-plt.xticks(np.arange(-1000, 1000, 500))  # Larger x-axis steps
+plt.xlim(0, 500)
+plt.xticks(np.arange(0, 500, 500))  # Larger x-axis steps
 plt.legend()
 plt.tight_layout()
 plt.show()
