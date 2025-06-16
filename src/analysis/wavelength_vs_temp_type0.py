@@ -10,17 +10,17 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import brentq  # Brent’s method for root-finding
-from optics.phase_match_type2 import delta_k_s, delta_k_i  # Δk functions from Equation 8
+from optics.phase_match_type0 import delta_k_s, delta_k_i  # Δk functions from Equation 8
 
 # -------------------------
 # Define temperature and wavelength search ranges
 # -------------------------
 
 # Temperature range [°C] over which to compute tuning curves
-T_vals = np.linspace(50, 500, 10000)  # 141 points from 0°C to 500°C
+T_vals = np.linspace(0, 50, 50)  # 141 points from 0°C to 500°C
 
 # Wavelength bracket [nm] for root-finding (where Δk = 0)
-λ_brack = (0.7, 1)
+λ_brack = (0.7, 0.9)
 
 # -------------------------
 # Root-finding: solve Δk = 0 (Equation 8)
@@ -32,16 +32,25 @@ T_vals = np.linspace(50, 500, 10000)  # 141 points from 0°C to 500°C
 λs_roots = []  # Signal wavelength roots
 λi_roots = []  # Idler wavelength roots
 
+# Debugging: Check function behavior at the bracket bounds
 for T in T_vals:
-    # Use Brent’s method to find signal wavelength λs such that Δk_s(λs, T) = 0
-    λs0 = brentq(lambda ls: delta_k_s(ls, T), *λ_brack)
+    f_a = delta_k_s(λ_brack[0], T)
+    f_b = delta_k_s(λ_brack[1], T)
 
-    # Similarly, find idler wavelength λi such that Δk_i(λi, T) = 0
+    print(f"Temperature {T}: f({λ_brack[0]}) = {f_a}, f({λ_brack[1]}) = {f_b}")
+
+    if f_a * f_b > 0:
+        print(f"Warning: No sign change for T = {T}, skipping...")
+        continue  # Skip if no sign change
+
+    # Perform root-finding only if sign change is detected
+    λs0 = brentq(lambda ls: delta_k_s(ls, T), *λ_brack)
     λi0 = brentq(lambda li: delta_k_i(li, T), *λ_brack)
 
     # Store roots
     λs_roots.append(λs0)
     λi_roots.append(λi0)
+
 
 # -------------------------
 # Plotting: Signal and Idler Tuning Curves
@@ -76,4 +85,3 @@ plt.grid(True)
 # Display all plots
 plt.show()
 
-#94.12

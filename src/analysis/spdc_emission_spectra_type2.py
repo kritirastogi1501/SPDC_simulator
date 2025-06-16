@@ -19,13 +19,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-from optics.phase_match import delta_k_s, delta_k_i
+from optics.phase_match_type2 import delta_k_s, delta_k_i
 
 # ----------------------
 # Parameters
 # ----------------------
 L = 25e-3           # Crystal length in meters (25 mm)
-T = 266.2           # Temperature in °C (choose your operating T)
+T = 247          # Temperature in °C (choose your operating T)
 
 # Wavelength ranges (μm)
 lambda_s_um = np.linspace(0.75, 0.9, 500)   # Signal: 750–900 nm

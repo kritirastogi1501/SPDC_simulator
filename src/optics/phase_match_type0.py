@@ -5,14 +5,14 @@ import sys
 sys.path.append("C:/Users/Asus/OneDrive/Desktop/Sanya Personal/Projects/DRDO internship/spdc_simulator/src")
 
 import math
-from optics.sellmeier import n_y_T, n_z_T, poling_period
+from optics.sellmeier import n_z_T, poling_period
 
 # ----------------------------
 # Constants and conversions
 # ----------------------------
 
 # Pump wavelength fixed at 405 nm
-λp_um = 0.40533
+λp_um = 0.405
 
 
 # ----------------------------
@@ -51,10 +51,10 @@ def delta_k_s(λs_um, T):
     λi_um = λi_from_λs(λs_um)
 
     # Each term corresponds to one term in Equation 8
-    kp = 2 * math.pi * n_y_T(λp_um, T) / (λp_um * conv)   # First term: n_y(λp)
-    ks = 2 * math.pi * n_z_T(λs_um, T) / (λs_um * conv)   # Second term: n_z(λs)
-    ki = 2 * math.pi * n_y_T(λi_um, T) / (λi_um * conv)   # Third term: n_y(λi)
-    kG = 2 * math.pi / (poling_period(T) * conv)          # Fourth term: Λ(T)
+    kp = 2 * math.pi * n_z_T(λp_um, T) / (λp_um * conv)   
+    ks = 2 * math.pi * n_z_T(λs_um, T) / (λs_um * conv)   
+    ki = 2 * math.pi * n_z_T(λi_um, T) / (λi_um * conv)   
+    kG = 2 * math.pi / (poling_period(T) * conv)          
 
     return kp - ks - ki - kG
 
@@ -67,9 +67,9 @@ def delta_k_i(λi_um, T):
     conv = 1e-6  # Convert μm to meters
 
     # Terms as per Equation 8
-    kp = 2 * math.pi * n_y_T(λp_um, T) / (λp_um * conv)   # n_y(λp)
+    kp = 2 * math.pi * n_z_T(λp_um, T) / (λp_um * conv)   # n_y(λp)
     ks = 2 * math.pi * n_z_T(λs_um, T) / (λs_um * conv)   # n_z(λs)
-    ki = 2 * math.pi * n_y_T(λi_um, T) / (λi_um * conv)   # n_y(λi)
+    ki = 2 * math.pi * n_z_T(λi_um, T) / (λi_um * conv)   # n_y(λi)
     kG = 2 * math.pi / (poling_period(T) * conv)          # Λ(T)
 
     return kp - ks - ki - kG
@@ -77,9 +77,9 @@ def delta_k_i(λi_um, T):
 
 def delta_k(λi_um, λs_um, T):
     conv = 1e-6  # Convert μm to meters
-    kp = 2 * math.pi * n_y_T(λp_um, T) / (λp_um * conv)   # n_y(λp)
+    kp = 2 * math.pi * n_z_T(λp_um, T) / (λp_um * conv)   # n_y(λp)
     ks = 2 * math.pi * n_z_T(λs_um, T) / (λs_um * conv)   # n_z(λs)
-    ki = 2 * math.pi * n_y_T(λi_um, T) / (λi_um * conv)   # n_y(λi)
+    ki = 2 * math.pi * n_z_T(λi_um, T) / (λi_um * conv)   # n_y(λi)
     kG = 2 * math.pi / (poling_period(T) * conv)          # Λ(T)
 
     return kp - ks - ki - kG
