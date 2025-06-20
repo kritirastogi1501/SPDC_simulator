@@ -1,48 +1,34 @@
 # -*- coding: utf-8 -*-
 """
 Updated on: 2025-06-20
-Updated by: ChatGPT
-Modified to use Eq1 to Eq4 for refractive index calculations and 
-thermo-optic corrections for KTP Type-II SPDC simulation.
+Updated by: Sanya Garg
+
+This script computes and plots the wavelength vs. temperature tuning curves
+for Type-II SPDC in PPKTP (405 nm pump → ~810 nm signal/idler) using:
+  - Sellmeier equations for KTP
+  - Thermo-optic corrections
+  - Thermal expansion of the poling period
+
+All units: wavelength in micrometers, temperature in °C.
 """
 
-#=================================Library======================================
-from qutip import *
 import numpy as np
-from numpy import linalg as LA
-import math as ma
-import cmath as ca
-import scipy as sc
-from scipy.optimize import fsolve
-from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-plt.rcParams.update({"text.usetex": False})
-from mpl_toolkits import mplot3d
-import sympy as sp
-import random as ra
-import matplotlib.colors as mcolors
-import matplotlib.ticker as ticker
-from tqdm import tqdm
-import time
+from scipy.optimize import fsolve
 
-I = complex(0,1)
-I_2 = qeye(2)
+#------------------------ Sellmeier coefficients for KTP ------------------------
+# From Hamel thesis Appendix B at 25°C
+Y0 = [2.09930, 0.922683, 0.0467695, 0.0138404]  # Eq1 for n_y
+Z0 = [2.12725, 1.18431, 0.0514852, 0.6603, 100.00507, 9.68956e-3]  # Eq2 for n_z
 
-#================================Contants_for_KTP==============================
-Y0 = [2.09930, 0.922683, 0.0467695, 0.0138404]  # Eq1
-Z0 = [2.12725, 1.18431, 0.0514852, 0.6603, 100.00507, 9.68956e-3]  # Eq2
-
-#==============================================================================
-#===============================Sellmeier Equations=============================
+#--------------------------- Sellmeier equations --------------------------------
 def nY(lam):
-    # Eq1
-    return np.sqrt(Y0[0] + ((Y0[1] / (lam**2 - Y0[2])) - Y0[3]) * lam**2)
+    return np.sqrt(Y0[0] + (Y0[1] / (lam**2 - Y0[2]) - Y0[3]) * lam**2)
 
 def nZ(lam):
-    # Eq2
     return np.sqrt(Z0[0] + ((Z0[1] / (lam**2 - Z0[2]) + Z0[3] / (lam**2 - Z0[4]) - Z0[5]) * lam**2))
 
-#==============================Temp Corrections (Eq3 & Eq4)=====================
+#----------------------- Thermo-optic corrections --------------------------------
 def delta_nY(lam, T):
     dT = T - 25.0
     return (
@@ -61,50 +47,49 @@ def delta_nZ(lam, T):
         ((4.1010e-6 + 3.1481e-8 * dT) * dT) / lam**3
     )
 
-#===============================Final Refractive Index==========================
 def nY_T(lam, T):
     return nY(lam) + delta_nY(lam, T)
 
 def nZ_T(lam, T):
     return nZ(lam) + delta_nZ(lam, T)
 
-#===============================Poling Period==================================
-def Lambda(T):
-    p = 9.925  # micron
-    alpha = 6.7e-6
-    beta = 11e-9
-    return p * (1 + alpha * (T - 25) + beta * (T - 25)**2)
+#----------------------- Poling period expansion --------------------------------
+def Lambda_QPM(T, Λ0=9.925):
+    alpha = 6.7e-6  # /°C
+    beta  = 1.1e-8  # /°C^2
+    return Λ0 * (1 + alpha * (T - 25) + beta * (T - 25)**2)
 
-#===============================Wavelength Calculations=========================
-def Lambda_s(lam_p, lam_i):
-    return 1 / (1 / lam_p - 1 / lam_i)
+#------------------ Energy conservation helper ----------------------------------
+lambda_p = 0.405  # pump in micrometers
 
-lambda_p = 0.405  # micron
+def lambda_signal(lambda_idler):
+    return 1 / (1 / lambda_p - 1 / lambda_idler)
 
-def eqn1(lam_i, T):
-    lam_s = Lambda_s(lambda_p, lam_i)
-    return 2 * np.pi *(
-        nY_T(lambda_p, T) / lambda_p -
-        nZ_T(lam_s, T) / lam_s -
-        nY_T(lam_i, T) / lam_i -
-        1 / Lambda(T)
+#------------------ Phase-matching equation solver --------------------------------
+def phase_match_eq(lambda_idler, T):
+    lam_s = lambda_signal(lambda_idler)
+    return (
+        nY_T(lambda_p, T) / lambda_p
+        - nZ_T(lam_s, T) / lam_s
+        - nY_T(lambda_idler, T) / lambda_idler
+        - 1 / Lambda_QPM(T)
     )
 
-def find_lambda_i(T):
-    sol = fsolve(eqn1, x0=0.81, args=(T,), xtol=1e-4)
+def find_lambda_idler(T):
+    sol = fsolve(phase_match_eq, x0=0.81, args=(T,), xtol=1e-6)
     return sol[0]
 
-#===============================Plotting=======================================
-Tmin, Tmax = 0, 120
-T_vals = np.linspace(Tmin, Tmax, 500)
-lambda_i_vals = [find_lambda_i(T) for T in T_vals]
-Lambda_s_vec = np.vectorize(Lambda_s)
+#--------------------------- Compute and Plot ------------------------------------
+T_vals = np.linspace(0, 120, 400)
+idler_vals = [find_lambda_idler(T) for T in T_vals]
+signal_vals = [lambda_signal(li) for li in idler_vals]
 
-plt.plot(T_vals, lambda_i_vals, label=r"$\lambda_{i}$")
-plt.plot(T_vals, Lambda_s_vec(lambda_p, lambda_i_vals), label=r"$\lambda_{s}$")
-plt.xlabel("Temperature (°C)")
-plt.ylabel("Wavelength (µm)")
-plt.title("Signal and Idler Wavelength vs. Temperature for Type-II SPDC")
+plt.plot(T_vals, signal_vals, label='Signal (λ_s)')
+plt.plot(T_vals, idler_vals, label='Idler (λ_i)')
+plt.xlabel('Temperature (°C)')
+plt.ylabel('Wavelength (µm)')
+plt.title('Type-II SPDC Wavelength vs Temperature for PPKTP')
 plt.grid(True)
 plt.legend()
+plt.tight_layout()
 plt.show()
