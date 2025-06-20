@@ -13,7 +13,7 @@ from optics.sellmeier import n_y_T, n_z_T, poling_period
 # ----------------------------
 
 # Pump wavelength fixed at 405 nm
-λp_um = 0.405
+λp_um = 0.40533
 
 
 # ----------------------------
