@@ -77,7 +77,7 @@ def Lambda_QPM(T, Λ0=9.925):
     return Λ0 * (1 + alpha * dT + beta * dT**2)
 
 #------------------ Energy conservation helper ----------------------------------
-lambda_p = 0.405  # pump in micrometers
+lambda_p = 0.400  # pump in micrometers
 
 def lambda_signal(lambda_idler):
     return 1 / (1/lambda_p - 1/lambda_idler)
