@@ -2,7 +2,7 @@
 import streamlit as st
 
 # Import each simulation module's entry point
-from app1 import run as run_app1
+from wavelength_vs_temp_type2 import run as run_app1
 
 # ... add imports for app3, app4, etc.
 
