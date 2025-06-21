@@ -52,7 +52,7 @@ def run():
     )
     points = st.sidebar.slider(
         "Resolution (# points):",
-        min_value=10, max_value=1000, value=400
+        min_value=10, max_value=1000, value=10
     )
 
     # Validate range

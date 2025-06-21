@@ -37,7 +37,7 @@ def run():
     )
     T_min = st.sidebar.number_input("Min temperature (°C):", value=0.0, format=f"%.{decimals}f")
     T_max = st.sidebar.number_input("Max temperature (°C):", value=120.0, format=f"%.{decimals}f")
-    points = st.sidebar.slider("Resolution (# points):", 10, 1000, 400)
+    points = st.sidebar.slider("Resolution (# points):", 10, 1000, 10)
 
     # Validate input
     if T_max <= T_min:
