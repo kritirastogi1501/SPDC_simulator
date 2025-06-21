@@ -29,14 +29,14 @@ sim_choice = st.selectbox(
     "Choose a simulation:",
     [
         "— Select —",
-        "Wavelength vs Temperature",  # maps to app1
+        "Wavelength vs Temperature Type 2",  # maps to app1
         "Poling Period vs Temperature",  # maps to app2
         # ... add labels for app3, app4, etc.
     ]
 )
 
 # Route to the chosen module
-if sim_choice == "Wavelength vs Temperature":
+if sim_choice == "Wavelength vs Temperature Type 2":
     # run the UI defined in app1.py
     run_app1()
 else:
