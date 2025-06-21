@@ -70,7 +70,7 @@ def nZ_T(lam, T):
     return nZ(lam) + delta_nZ(lam, T)
 
 #----------------------- Poling period expansion --------------------------------
-def Lambda_QPM(T, Λ0=10):
+def Lambda_QPM(T, Λ0=9.925):
     alpha = 6.7e-6   # /°C
     beta  = 1.1e-8   # /°C^2
     dT = T - 25.0
@@ -85,7 +85,7 @@ def lambda_signal(lambda_idler):
 #------------------ Phase-matching equation solver -------------------------------
 def phase_match_eq(lambda_idler, T):
     lam_s = lambda_signal(lambda_idler)
-    return 2 * np.pi * (
+    return (
         nY_T(lambda_p, T)/lambda_p
         - nZ_T(lam_s,   T)/lam_s
         - nY_T(lambda_idler, T)/lambda_idler
@@ -111,3 +111,27 @@ if __name__ == "__main__":
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+
+def compute_typeii_wavelengths(T_vals, lambda_p=0.405):
+    idler_vals = [find_lambda_idler(T) for T in T_vals]
+    signal_vals = [lambda_signal(li) for li in idler_vals]
+    return signal_vals, idler_vals
+
+
+def find_signal_idler_at_temp(T, lambda_p=0.405):
+    """Compute signal and idler wavelengths at a specific temperature."""
+    lambda_idler = find_lambda_idler(T)
+    lambda_signal_val = lambda_signal(lambda_idler)
+    return lambda_signal_val, lambda_idler
+
+def find_degenerate_temperature(lambda_p=0.405):
+    """Find the temperature where signal ≈ idler (degeneracy)."""
+    def degenerate_condition(T):
+        lam_i = find_lambda_idler(T)
+        lam_s = lambda_signal(lam_i)
+        return lam_s - lam_i
+
+    T_guess = 50  # Good starting point for 405 nm pump
+    T_deg = fsolve(degenerate_condition, x0=T_guess)[0]
+    return T_deg
