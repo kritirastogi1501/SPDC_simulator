@@ -7,7 +7,7 @@ A_pol = 6.7e-6  # °C⁻¹
 B_pol = 11e-9   # °C⁻²
 
 # Temperature range from -50°C to 150°C with bigger steps (e.g., 5°C steps)
-T = np.arange(-1000, 1000, 500)
+T = np.arange(0, 500, 500)
 
 # Calculate Λ for each temperature
 Lambda = Lambda_0 * (1 + A_pol * (T - 25.0) + B_pol * (T - 25.0)**2)

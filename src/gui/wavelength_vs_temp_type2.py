@@ -2,29 +2,24 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
-import io
+import plotly.graph_objects as go
 
 # Import core index, thermo-optic, and QPM functions
 from optics.SPDC_Phase_Matching import (
-    poly_inv, nY, nZ, delta_nY, delta_nZ,
     nY_T, nZ_T, Lambda_QPM
 )
-# energy conservation
-from optics.SPDC_Phase_Matching import lambda_signal  # uses global lambda_p ignored here
 
 # ---------------------------------------------------------------------------- #
-# Module: Wavelength vs Temperature
+# Module: Wavelength vs Temperature (Interactive)
 # ---------------------------------------------------------------------------- #
 
 def run():
     """
-    Streamlit UI for plotting SPDC signal/idler wavelengths
-    versus temperature for a given pump λ and poling L0.
+    Streamlit UI for interactive SPDC tuning curves
+    with hover-enabled Plotly chart.
     """
     # Sidebar: display precision
     st.sidebar.header("Display Settings")
@@ -40,16 +35,16 @@ def run():
         "Poling period L0 (µm):", 1.0, 20.0,
         value=9.925, format=f"%.{decimals}f"
     )
-    T_min = st.sidebar.number_input("Min temperature (°C):", value=0)
-    T_max = st.sidebar.number_input("Max temperature (°C):", value=120)
+    T_min = st.sidebar.number_input("Min temperature (°C):", value=0.0, format=f"%.{decimals}f")
+    T_max = st.sidebar.number_input("Max temperature (°C):", value=120.0, format=f"%.{decimals}f")
     points = st.sidebar.slider("Resolution (# points):", 10, 1000, 400)
 
-    # Validate input range
+    # Validate input
     if T_max <= T_min:
         st.sidebar.error("Max temperature must exceed min temperature.")
         return
 
-    # Local solver using passed λp and L0
+    # Define local solver
     def find_idler(T):
         def phase_mismatch(li):
             ls = 1/(1/lambda_p - 1/li)
@@ -62,32 +57,36 @@ def run():
         sol = fsolve(phase_mismatch, x0=2*lambda_p, xtol=1e-6)
         return sol[0]
 
-    # Compute tuning curves
+    # Compute data
     temps = np.linspace(T_min, T_max, points)
     idlers = [find_idler(T) for T in temps]
     signals = [1/(1/lambda_p - 1/li) for li in idlers]
 
-    # Plot
-    fig, ax = plt.subplots()
-    ax.plot(temps, signals, label="Signal (λs)")
-    ax.plot(temps, idlers, label="Idler (λi)")
-    ax.set_xlabel("Temperature (°C)")
-    ax.set_ylabel("Wavelength (µm)")
-    ax.set_title(f"Tuning Curve: λp={lambda_p:.{decimals}f} µm, L0={L0:.{decimals}f} µm")
-    ax.grid(True)
-    ax.legend()
+    # Interactive Plotly chart
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=temps, y=signals,
+        mode='lines+markers', name='Signal (λs)',
+        hovertemplate='T=%{x:.2f}°C<br>λs=%{y:.{decimals}f} µm'
+    ))
+    fig.add_trace(go.Scatter(
+        x=temps, y=idlers,
+        mode='lines+markers', name='Idler (λi)',
+        hovertemplate='T=%{x:.2f}°C<br>λi=%{y:.{decimals}f} µm'
+    ))
+    fig.update_layout(
+        title=f'Tuning Curve: λp={lambda_p:.{decimals}f} µm, L0={L0:.{decimals}f} µm',
+        xaxis_title='Temperature (°C)', yaxis_title='Wavelength (µm)',
+        hovermode='x unified'
+    )
 
-    # Display figure
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=200, bbox_inches="tight")
-    buf.seek(0)
-    st.image(buf, width = 700)
+    st.plotly_chart(fig, use_container_width=True)
 
     # Degenerate temperature
     lambda_deg = 2 * lambda_p
     def f_deg(T): return find_idler(T) - lambda_deg
     try:
-        T_deg = fsolve(f_deg, x0=(T_min + T_max)/2)[0]
+        T_deg = fsolve(f_deg, x0=(T_min+T_max)/2)[0]
         if T_min <= T_deg <= T_max:
             st.write(f"**Degenerate Temperature:** {T_deg:.{decimals}f} °C")
             st.write(f"λs = λi = {lambda_deg:.{decimals}f} µm")
@@ -99,8 +98,8 @@ def run():
     # Single-temperature analysis
     st.sidebar.header("Single-Temperature Analysis")
     T_set = st.sidebar.number_input(
-        "Select temperature (°C):",
-        float(T_min), float(T_max), (T_min + T_max)/2
+        "Select temperature (°C):", min_value=float(T_min), max_value=float(T_max),
+        value=(T_min+T_max)/2, format=f"%.{decimals}f"
     )
     if st.sidebar.button("Compute λs & λi"):
         li = find_idler(T_set)

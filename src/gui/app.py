@@ -3,6 +3,7 @@ import streamlit as st
 
 # Import each simulation module's entry point
 from wavelength_vs_temp_type2 import run as run_app1
+from pol_period_vs_temp import run as run_app2
 
 # ... add imports for app3, app4, etc.
 
@@ -39,6 +40,11 @@ sim_choice = st.selectbox(
 if sim_choice == "Wavelength vs Temperature Type 2":
     # run the UI defined in app1.py
     run_app1()
+
+if sim_choice == "Poling Period vs Temperature":
+    # run the UI defined in app2.py
+    run_app2()
+
 else:
     # default message
     st.info("Please select a simulation from the dropdown.")
