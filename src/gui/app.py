@@ -5,74 +5,98 @@ sys.path.append("C:/Users/Asus/OneDrive/Desktop/Sanya Personal/Projects/DRDO int
 
 # app.py
 
-# app.py
-
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-from optics.SPDC_Phase_Matching import (
-    compute_typeii_wavelengths,
-    find_signal_idler_at_temp,
-    find_degenerate_temperature,
-    lambda_signal,
-    find_lambda_idler
-)
+from scipy.optimize import fsolve
 
-# ---------------- Streamlit App UI ----------------
+# ----------------- Sellmeier & thermo-optic, from user script -----------------
+Y0 = [2.19229, 0.83547, 0.04970, 0.01621]
+Z0 = [2.12725, 1.18431, 0.0514852, 0.6603, 100.00507, 9.68956e-3]
 
-st.set_page_config(page_title="SPDC PPKTP Simulator", layout="wide")
-st.title("🔬 SPDC in PPKTP — Wavelength vs Temperature")
-st.markdown("""
-Simulate **Type-II SPDC** in PPKTP:  
-View how signal and idler wavelengths depend on temperature for a given pump wavelength.
-""")
+aY1 = [6.2897e-6, 6.3061e-6, -6.0629e-6, 2.6486e-6]
+aY2 = [-1.4445e-9, 2.2244e-8, -3.5770e-8, 1.3470e-8]
+aZ1 = [9.9587e-6, 9.9228e-6, -8.9603e-6, 4.1010e-6]
+aZ2 = [-1.1882e-8, 1.0459e-7, -9.8136e-8, 3.1481e-8]
 
-# Sidebar settings
-st.sidebar.markdown("### ⚙️ Display Settings")
-decimal_places = st.sidebar.slider("Decimal Places", min_value=2, max_value=10, value=4)
-format_str = f"{{:.{decimal_places}f}}"
+# functions
+poly_inv = lambda lam, c: sum(cx / lam**i for i, cx in enumerate(c))
 
-# User Inputs
-lambda_p = st.number_input("Pump Wavelength (µm)", min_value=0.300, max_value=1.000, value=0.405, step=0.001, format="%.5f")
-temp_min = st.slider("Minimum Temperature (°C)", min_value=0, max_value=150, value=20)
-temp_max = st.slider("Maximum Temperature (°C)", min_value=temp_min+1, max_value=200, value=120)
-num_points = st.slider("Resolution (points)", 50, 1000, 400)
+def nY(lam):
+    return np.sqrt(Y0[0] + (Y0[1] / (lam**2 - Y0[2]) - Y0[3]) * lam**2)
 
-# ---------------- Compute Main Tuning Curve ----------------
+def nZ(lam):
+    return np.sqrt(Z0[0] + ((Z0[1] / (lam**2 - Z0[2]) + Z0[3] / (lam**2 - Z0[4]) - Z0[5]) * lam**2))
 
-T_vals = np.linspace(temp_min, temp_max, num_points)
-signal_vals, idler_vals = compute_typeii_wavelengths(T_vals, lambda_p=lambda_p)
+def delta_nY(lam, T):
+    dT = T - 25
+    return poly_inv(lam, aY1) * dT + poly_inv(lam, aY2) * dT**2
 
+def delta_nZ(lam, T):
+    dT = T - 25
+    return poly_inv(lam, aZ1) * dT + poly_inv(lam, aZ2) * dT**2
+
+def nY_T(lam, T): return nY(lam) + delta_nY(lam, T)
+def nZ_T(lam, T): return nZ(lam) + delta_nZ(lam, T)
+
+# poling period
+def Lambda_QPM(T, L0=9.925):
+    dT = T - 25
+    return L0 * (1 + 6.7e-6 * dT + 1.1e-8 * dT**2)
+
+# energy conservation
+def lambda_signal(lambda_idler, lambda_p):
+    return 1 / (1/lambda_p - 1/lambda_idler)
+
+# phase matching
+def phase_match_eq(lambda_idler, T, lambda_p):
+    lam_s = lambda_signal(lambda_idler, lambda_p)
+    return (nY_T(lambda_p, T)/lambda_p - nZ_T(lam_s, T)/lam_s - nY_T(lambda_idler, T)/lambda_idler - 1/Lambda_QPM(T))
+
+def find_lambda_idler(T, lambda_p):
+    return fsolve(phase_match_eq, x0=2*lambda_p, args=(T, lambda_p), xtol=1e-6)[0]
+
+# ----------------------- Streamlit UI ------------------------
+st.title("Type-II SPDC Wavelength vs. Temperature")
+
+# 1. Display settings
+decimals = st.sidebar.slider("Decimal places", min_value=0, max_value=10, value=4)
+
+# 2. Pump & scan settings
+st.sidebar.header("Pump & Temperature Sweep")
+lambda_p = st.sidebar.number_input("Pump wavelength (µm)", min_value=0.1, max_value=1.5, value=0.405, format="%.5f")
+T_min = st.sidebar.number_input("Min temperature (°C)", value=0)
+T_max = st.sidebar.number_input("Max temperature (°C)", value=120)
+points = st.sidebar.slider("Resolution (# points)", min_value=10, max_value=1000, value=400)
+
+# compute tuning curve
+T_vals = np.linspace(T_min, T_max, points)
+idler_vals = [find_lambda_idler(T, lambda_p) for T in T_vals]
+signal_vals = [lambda_signal(li, lambda_p) for li in idler_vals]
+
+# plot
 fig, ax = plt.subplots()
-ax.plot(T_vals, signal_vals, label="Signal (λₛ)", color="blue")
-ax.plot(T_vals, idler_vals, label="Idler (λᵢ)", color="green")
-ax.set_xlabel("Temperature (°C)")
-ax.set_ylabel("Wavelength (µm)")
-ax.set_title("Type-II SPDC Wavelength vs Temperature")
+ax.plot(T_vals, signal_vals, label='Signal (λs)')
+ax.plot(T_vals, idler_vals, label='Idler (λi)')
+ax.set_xlabel('Temperature (°C)')
+ax.set_ylabel('Wavelength (µm)')
+ax.set_title(f'Tuning curve for λp={lambda_p:.{decimals}f} µm')
 ax.grid(True)
 ax.legend()
 st.pyplot(fig)
 
-# ---------------- Instant Value Lookup ----------------
+# degenerate temperature
+lambda_deg = 2 * lambda_p
+f_deg = lambda T: find_lambda_idler(T, lambda_p) - lambda_deg
+try:
+    T_deg = fsolve(f_deg, x0=(T_min+T_max)/2)[0]
+    if T_min <= T_deg <= T_max:
+        st.write(f"**Degenerate temperature:** {T_deg:.{decimals}f} °C  \nAt degeneracy λs = λi = {lambda_deg:.{decimals}f} µm")
+    else:
+        st.write("No degenerate temperature found in the selected range.")
+except Exception:
+    st.write("Error finding degenerate temperature.")
 
-st.markdown("### 📍 Signal & Idler at a Specific Temperature")
-lookup_temp = st.number_input("Enter temperature (°C) to inspect", min_value=0.0, max_value=200.0, value=25.0, step=0.1)
 
-sig, idi = find_signal_idler_at_temp(lookup_temp, lambda_p=lambda_p)
 
-st.write(
-    f"At **{format_str.format(lookup_temp)} °C** → "
-    f"Signal: **{format_str.format(sig)} µm**, "
-    f"Idler: **{format_str.format(idi)} µm**"
-)
-
-# ---------------- Degenerate Temperature ----------------
-
-st.markdown("### 🎯 Find Degenerate Temperature (λₛ = λᵢ)")
-if st.button("Find Degenerate Temperature"):
-    T_deg = find_degenerate_temperature(lambda_p=lambda_p)
-    lam_deg = lambda_signal(find_lambda_idler(T_deg))
-    st.success(
-        f"Degenerate temperature: **{format_str.format(T_deg)} °C**, "
-        f"Degenerate λ: **{format_str.format(lam_deg)} µm**"
-    )
+# end of app
