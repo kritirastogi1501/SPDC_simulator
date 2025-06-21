@@ -41,7 +41,7 @@ if sim_choice == "Wavelength vs Temperature Type 2":
     # run the UI defined in app1.py
     run_app1()
 
-if sim_choice == "Poling Period vs Temperature":
+elif sim_choice == "Poling Period vs Temperature":
     # run the UI defined in app2.py
     run_app2()
 
