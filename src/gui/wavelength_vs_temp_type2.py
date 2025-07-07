@@ -29,7 +29,8 @@ def run():
     st.sidebar.header("Simulation Parameters")
     lambda_p = st.sidebar.number_input(
         "Pump wavelength λp (µm):", 0.1, 2.0,
-        value=0.405, format=f"%.{decimals}f"
+        value=0.405, format=f"%.{decimals}f",
+        step=0.001
     )
     L0 = st.sidebar.number_input(
         "Poling period L0 (µm):", 1.0, 20.0,
