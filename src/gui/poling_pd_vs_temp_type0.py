@@ -101,7 +101,7 @@ def run():
 
     ax.set_xlabel("Temperature (°C)")
     ax.set_ylabel("Poling Period Λ(T) (µm)")
-    ax.set_title("Poling Period vs Temperature")
+    ax.set_title("Poling Period vs Temperature Type 0")
     ax.grid(True)
     ax.set_ylim(ymin_user, ymax_user)
     ax.legend()
