@@ -50,7 +50,7 @@ def run():
 
     # Lookup Temperature
     st.sidebar.markdown("---")
-    st.sidebar.header("🔍 Lookup")
+    st.sidebar.header("🔍 Lookup Temperature")
     T_lookup = st.sidebar.number_input("Lookup Temperature (°C):", min_value=min_temp * 1.0, max_value=max_temp * 1.0, value=29.0, step=0.1)
 
     # === CALCULATION ===
@@ -70,22 +70,22 @@ def run():
 
     # === MAIN DISPLAY ===
     st.markdown(
-        """
-        <h1 style='text-align: center; font-size: 36px;'>
-            📈 <span style="color: #4dd0e1;">Poling Period</span> vs <span style="color: #ba68c8;">Temperature</span><br>
-            <span style="font-size: 22px; color: gray;">(Type-0 SPDC in PPKTP)</span>
-        </h1>
+       """
+            <h1 style='text-align: center; font-size: 36px; color: black;'>
+            📈 Poling Period vs Temperature<br>
+            <span style="font-size: 22px; color: black;">(Type-0 SPDC in PPKTP)</span>
+            </h1>
         """,
         unsafe_allow_html=True
     )
 
     st.markdown(
         f"""
-        <div style='text-align: center; background-color: #e0f2ff; padding: 10px; border-radius: 10px;
-                    font-size: 22px; font-weight: bold; border: 1px solid #90caf9; color: #000000;'>
+            <div style='text-align: center; font-size: 22px; font-weight: bold; color: #000000;'>
             Λ({T_lookup:.1f} °C) = {Lambda_lookup:.{decimal_places}f} µm
-        </div>
-        """, unsafe_allow_html=True
+            </div>
+        """, 
+        unsafe_allow_html=True
     )
 
     # === PLOT ===

@@ -5,7 +5,6 @@ import streamlit as st
 from wavelength_vs_temp_type0 import run as run_app1
 from wavelength_vs_temp_type2 import run as run_app2
 from pol_period_vs_temp import run as run_app3
-from spdc_emission_spectra_type2 import run as run_app4
 from poling_pd_vs_temp_type0 import run as run_app5
 # ... add imports for app3, app4, etc.
 
@@ -35,7 +34,7 @@ sim_choice = st.selectbox(
         "Wavelength vs Temperature Type 0",#maps to app1
         "Wavelength vs Temperature Type 2",  # maps to app2
         "Poling Period vs Temperature Type 0",# maps to app5
-        "Poling Period vs Temperature "
+        "Poling Period vs Temperature"
         # ... add labels for app3, app4, etc.
     ]
 )
