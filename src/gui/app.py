@@ -34,7 +34,7 @@ sim_choice = st.selectbox(
         "Wavelength vs Temperature Type 0",#maps to app1
         "Wavelength vs Temperature Type 2",  # maps to app2
         "Poling Period vs Temperature Type 0",# maps to app5
-        "Poling Period vs Temperature"
+        "Poling Period vs Temperature Type 2"
         # ... add labels for app3, app4, etc.
     ]
 )
@@ -47,7 +47,7 @@ if sim_choice == "Wavelength vs Temperature Type 0":
 elif sim_choice == "Wavelength vs Temperature Type 2":
     # run the UI defined in app2.py
     run_app2()
-elif sim_choice == "Poling Period vs Temperature":
+elif sim_choice == "Poling Period vs Temperature Type 2":
     # run the UI defined in app3.py
     run_app3()
 

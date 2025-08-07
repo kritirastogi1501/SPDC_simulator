@@ -28,7 +28,10 @@ def run():
     beta = 11e-9
 
     # === SIDEBAR CONTROLS ===
-    st.sidebar.header("🔧 OVERALL GRAPH CONTROLS")
+    
+     # Precision dropdown
+    st.sidebar.header("📏 Display Precision")
+    decimal_places = st.sidebar.selectbox("Decimal Places for Λ(T):", [2, 3, 4, 5, 6], index=3)
 
     # Temperature limits
     st.sidebar.markdown("---")
@@ -43,10 +46,6 @@ def run():
     # Slider for temperature range
     T_min, T_max = st.sidebar.slider("Select Temperature Range (°C):", min_temp, max_temp, (20, 80))
 
-    # Precision dropdown
-    st.sidebar.markdown("---")
-    st.sidebar.header("📏 Display Precision")
-    decimal_places = st.sidebar.selectbox("Decimal Places for Λ(T):", [2, 3, 4, 5, 6], index=3)
 
     # Lookup Temperature
     st.sidebar.markdown("---")
